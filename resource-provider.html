@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Response Resource Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #003366; ;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #f4f6f7;
+            --text-color: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .input-group input, 
+        .input-group select, 
+        .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        #resourceList, #assignmentLog {
+            margin-top: 20px;
+        }
+
+        .resource-item, .log-item {
+            background-color: #f9f9f9;
+            border-left: 4px solid var(--secondary-color);
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        #aiAssistantChat {
+            background-color: #e6f2ff;
+            border: 1px solid var(--secondary-color);
+            border-radius: 8px;
+        }
+
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            cursor: pointer;
+            background-color: #f0f6ff;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            padding: 15px;
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+            padding: 0 15px;
+            opacity: 0;
+        }
+
+        #chatMessages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .user-message {
+            background-color: #f0f0f0;
+            text-align: right;
+        }
+
+        .ai-message {
+            background-color: #e6f2ff;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Disaster Response Resource Management</h1>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Resource Registration</h2>
+                <form id="resourceForm">
+                    <div class="input-group">
+                        <label for="resourceType">Resource Type</label>
+                        <select id="resourceType" required>
+                            <option value="">Select Resource Type</option>
+                            <option value="medical">Medical Supplies</option>
+                            <option value="food">Food</option>
+                            <option value="water">Water</option>
+                            <option value="shelter">Shelter</option>
+                            <option value="equipment">Emergency Equipment</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="number" id="quantity" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="additionalDetails">Additional Details</label>
+                        <textarea id="additionalDetails" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn">Register Resource</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Resource List</h2>
+                <div id="resourceList"></div>
+            </div>
+
+            <div class="card">
+                <h2>Resource Assignment</h2>
+                <form id="assignmentForm">
+                    <div class="input-group">
+                        <label for="assignResource">Select Resource</label>
+                        <select id="assignResource" required></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="assignLocation">Destination Location</label>
+                        <input type="text" id="assignLocation" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="urgencyLevel">Urgency Level</label>
+                        <select id="urgencyLevel" required>
+                            <option value="">Select Urgency</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Assign Resource</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Assignment Log</h2>
+                <div id="assignmentLog"></div>
+            </div>
+
+            <div class="card" id="aiAssistantChat">
+                <h2 class="collapsible-header">
+                    AI Disaster Response Assistant 
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="collapsible-content">
+                    <div id="chatMessages"></div>
+                    <form id="chatForm">
+                        <div class="input-group">
+                            <input type="text" id="chatInput" placeholder="Ask the AI assistant..." required>
+                        </div>
+                        <button type="submit" class="btn">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Resource Management System
+        class ResourceManager {
+            constructor() {
+                this.resources = [];
+                this.assignments = [];
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                document.getElementById('resourceForm').addEventListener('submit', this.registerResource.bind(this));
+                document.getElementById('assignmentForm').addEventListener('submit', this.assignResource.bind(this));
+            }
+
+            registerResource(event) {
+                event.preventDefault();
+                const resourceType = document.getElementById('resourceType').value;
+                const quantity = document.getElementById('quantity').value;
+                const location = document.getElementById('location').value;
+                const additionalDetails = document.getElementById('additionalDetails').value;
+
+                const resource = {
+                    id: Date.now(),
+                    type: resourceType,
+                    quantity: parseInt(quantity),
+                    location: location,
+                    details: additionalDetails
+                };
+
+                this.resources.push(resource);
+                this.updateResourceList();
+                this.updateAssignmentDropdown();
+                this.clearResourceForm();
+            }
+
+            updateResourceList() {
+                const resourceList = document.getElementById('resourceList');
+                resourceList.innerHTML = '';
+                
+                this.resources.forEach(resource => {
+                    const resourceItem = document.createElement('div');
+                    resourceItem.classList.add('resource-item');
+                    resourceItem.innerHTML = `
+                        <strong>${resource.type.toUpperCase()}</strong>
+                        <p>Quantity: ${resource.quantity}</p>
+                        <p>Location: ${resource.location}</p>
+                        <p>Details: ${resource.details}</p>
+                    `;
+                    resourceList.appendChild(resourceItem);
+                });
+            }
+
+            updateAssignmentDropdown() {
+                const assignResourceSelect = document.getElementById('assignResource');
+                assignResourceSelect.innerHTML = '<option value="">Select Resource</option>';
+                
+                this.resources.forEach(resource => {
+                    const option = document.createElement('option');
+                    option.value = resource.id;
+                    option.textContent = `${resource.type} - ${resource.quantity} (${resource.location})`;
+                    assignResourceSelect.appendChild(option);
+                });
+            }
+
+            assignResource(event) {
+                event.preventDefault();
+                const resourceId = document.getElementById('assignResource').value;
+                const destinationLocation = document.getElementById('assignLocation').value;
+                const urgencyLevel = document.getElementById('urgencyLevel').value;
+
+                const resource = this.resources.find(r => r.id === parseInt(resourceId));
+                if (!resource) return;
+
+                const assignment = {
+                    id: Date.now(),
+                    resource: resource,
+                    destination: destinationLocation,
+                    urgency: urgencyLevel
+                };
+
+                this.assignments.push(assignment);
+                this.updateAssignmentLog();
+                this.removeAssignedResource(resourceId);
+                this.clearAssignmentForm();
+            }
+
+            removeAssignedResource(resourceId) {
+                this.resources = this.resources.filter(r => r.id !== parseInt(resourceId));
+                this.updateResourceList();
+                this.updateAssignmentDropdown();
+            }
+
+            updateAssignmentLog() {
+                const assignmentLog = document.getElementById('assignmentLog');
+                assignmentLog.innerHTML = '';
+                
+                this.assignments.forEach(assignment => {
+                    const logItem = document.createElement('div');
+                    logItem.classList.add('log-item');
+                    logItem.innerHTML = `
+                        <strong>Resource: ${assignment.resource.type}</strong>
+                        <p>Destination: ${assignment.destination}</p>
+                        <p>Urgency: ${assignment.urgency.toUpperCase()}</p>
+                    `;
+                    assignmentLog.appendChild(logItem);
+                });
+            }
+
+            clearResourceForm() {
+                document.getElementById('resourceType').value = '';
+                document.getElementById('quantity').value = '';
+                document.getElementById('location').value = '';
+                document.getElementById('additionalDetails').value = '';
+            }
+
+            clearAssignmentForm() {
+                document.getElementById('assignResource').value = '';
+                document.getElementById('assignLocation').value = '';
+                document.getElementById('urgencyLevel').value = '';
+            }
+        }
+
+        // AI Assistant Simulation
+        class AIAssistant {
+            constructor() {
+                this.initializeChatListener();
+            }
+
+            initializeChatListener() {
+                document.getElementById('chatForm').addEventListener('submit', this.handleUserMessage.bind(this));
+            }
+
+            handleUserMessage(event) {
+                event.preventDefault();
+                const chatInput = document.getElementById('chatInput');
+                const userMessage = chatInput.value.trim();
+
+                if (!userMessage) return;
+
+                this.displayMessage('user', userMessage);
+                chatInput.value = '';
+
+                // Simulate AI response with a slight delay
+                setTimeout(() => {
+                    const aiResponse = this.generateAIResponse(userMessage);
+                    this.displayMessage('ai', aiResponse);
+                }, 1000);
+            }
+
+            displayMessage(sender, message) {
+                const chatMessages = document.getElementById('chatMessages');
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message', `${sender}-message`);
+                messageElement.textContent = message;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            generateAIResponse(userMessage) {
+                // Simple AI response generation based on keywords
+                const lowercaseMessage = userMessage.toLowerCase();
+
+                const responseMap = {
+                    'help': 'I can help you coordinate disaster response resources. What specific assistance do you need?',
+                    'medical': 'Medical resources are crucial. I recommend prioritizing critical medical supplies and personnel.',
+                    'food': 'Food distribution requires careful planning. We can help optimize resource allocation.',
+                    'water': 'Access to clean water is critical. I suggest identifying the most affected areas.',
+                    'shelter': 'Shelter coordination is essential. We can help match available resources with urgent needs.',
+                    'emergency': 'In emergency situations, we prioritize life-saving resources and quick deployment.',
+                    'location': 'Location data helps us optimize resource distribution. Can you provide more specific details?',
+                    'urgency': 'Understanding urgency levels helps us make critical decisions quickly.'
+                };
+
+                // Find the best matching response
+                const matchedResponse = Object.keys(responseMap).find(key => 
+                    lowercaseMessage.includes(key)
+                );
+
+                return matchedResponse 
+                    ? responseMap[matchedResponse]
+                    : "I'm here to help with disaster response resource management. How can I assist you?";
+            }
+        }
+
+        // Collapsible Card Functionality
+        function setupCollapsibleCard() {
+            const aiAssistantChat = document.getElementById('aiAssistantChat');
+            const header = aiAssistantChat.querySelector('.collapsible-header');
+            const content = aiAssistantChat.querySelector('.collapsible-content');
+            const toggleIcon = aiAssistantChat.querySelector('.toggle-icon');
+
+            header.addEventListener('click', () => {
+                content.classList.toggle('collapsed');
+                toggleIcon.classList.toggle('rotated');
+            });
+
+            // Start collapsed by default
+            content.classList.add('collapsed');
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            const resourceManager = new ResourceManager();
+            const aiAssistant = new AIAssistant();
+            setupCollapsibleCard();
+        });
+    </script>
+</body>
+</html>
